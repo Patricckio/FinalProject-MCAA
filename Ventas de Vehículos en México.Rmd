@@ -1,0 +1,124 @@
+---
+title: "Ventas de Vehículos en México"
+author: "Gustavo Patricio Baeza Mejía"
+date: "2023-06-05"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Análisis de las Ventas de Vehículos en México de Enero 2005 a Abril 2023
+
+Durante los últimos 20 años, el mercado automotriz en México ha experimentado cambios importantes, impulsados por diversos factores como el crecimiento económico, cambios en la política automotriz y la evolución de las preferencias del consumidor.
+
+```{r Library, include=FALSE}
+library(httr)
+library(readxl)
+library(tidyr)
+library(stringr)
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+
+if (!file.exists("Proyecto Final/VehículosMéxico2005-2023.xlsx")){
+  if(!dir.exists("Proyecto Final")){
+    dir.create("Proyecto Final")
+  }
+  url <- "https://www.inegi.org.mx/contenidos/datosprimarios/iavl/tabulados/8_Ventas_serie.xlsx"
+  GET(url, write_disk("Proyecto Final/VehículosMéxico2005-2023.xlsx"))
+}
+
+Vehiculos <- read_excel("Proyecto Final/VehículosMéxico2005-2023.xlsx", range = "A6:J84242", col_types = c("text","numeric", "text", "text", "text", "text", "text", "text", "text", "numeric"))
+Vehiculos
+
+marks_no_sci <- function(x) format(x, big.mark = ",", decimal.mark = ".", scientific = FALSE)
+```
+
+La venta de autos en México ha experimentado un crecimiento notable, salvo en el 2008 producto de la crisis financiera internacional y en los años de la pandemia por COVID-19 donde la inflación, el aumento de precio en las materias primas, y la escasez de microchips ocasionaron la caida de las ventas, la economía mexicana ha sido estable durante este período, lo que ha permitido que más personas tengan acceso a financiamiento para adquirir vehículos. 
+
+Además, el aumento en la población urbana ha generado una mayor demanda de transporte personal, lo que ha impulsado la venta de autos en el país.
+
+## Ventas por Año
+
+```{r Ventas Años, echo=FALSE}
+Ventas_Año <- aggregate(Cantidad ~ Año, Vehiculos, FUN = sum)
+
+ggplot(Ventas_Año, aes(x=Año, y=Cantidad))+
+  geom_bar(stat="identity", width=.5, fill="darkblue") +
+  geom_text(aes(y= Cantidad, label = scales::comma(Cantidad)),
+            position = position_dodge(width = 0.9), size = 1.7, vjust = -1, hjust = 0.5, col = "black") +
+  labs(x= "Año", y="Unidades",
+       caption="Fuente de Datos: INEGI") +
+  scale_y_continuous(labels = marks_no_sci) +
+  theme_economist()
+```
+
+En 2022, de acuerdo con información del INEGI, en México se vendieron 1,094,728 autos. Las marcas con mayor participación de mercado son Nissan, GM y Volkswagen.
+
+Desde 2005 Nissan, Ford, GM, Chrysler y Volkswagen han dominado la industria automotriz mexicana logrando el 90% de los autos vendidos en México, sin embargo, hoy en día aunque el número de vehículos vendidos es prácticamente igual que hace 17 años, ahora hay 35 marcas (con más en camino) y las cinco armadoras principales han visto su participación bajar a menos de la mitad del mercado. El caso de Ford es el más dramático, pues habría pasado de vender 190 mil unidades en 2005, a 41 mil en 2022.
+
+En el mundo de las marcas de vehículos de lujo, Mercedes Benz se mantiene en el primer lugar con el mayor número de ventas.
+
+## Ventas por Marca
+
+```{r Ventas Marcas, echo=FALSE}
+Ventas_Marca <- aggregate(Cantidad ~ Marca, Vehiculos, FUN = sum)
+
+ggplot(Ventas_Marca, aes(x=Marca, y=Cantidad))+
+  geom_bar(stat="identity", width=.5, fill="darkgreen") +
+  geom_text(aes(y= Cantidad, label = scales::comma(Cantidad)),
+            position = position_dodge(width = 0.9), size = 1.7, vjust = 0.3, hjust = -0.1, col ="black") +
+    labs(x= "Marca", y="Unidades",
+       caption="Fuente de Datos: INEGI") +
+  scale_y_continuous(labels = marks_no_sci) +
+  coord_flip() +
+  theme_economist()
+```
+
+Durante lo últimos años, los autos compactos o sedan y las minivans, que estuvieron de moda en los años 90´s y 00´s, han empezado a ser desplazados por las SUVs y los subcompactos, en comparación con 2005 actualmente se venden en nuestro país menos de la mitad de minivans.
+
+Hace 15 o 20 años, el vehículo preferido por una buena parte del mercado mexicano eran los grandes sedanes. Ahora, este segmento fue reemplazado por las SUVs y los subcompactos en gran medida por el espacio y comodidad, la seguridad, su fácil manejo en áreas urbanas congestionadas, la eficiencia de combustible, la maniobrabilidad y el precio.
+
+## Ventas por Segmento
+
+```{r Ventas Segmentos, echo=FALSE}
+Ventas_Segmento <- aggregate(Cantidad ~ Segmento, Vehiculos, FUN = sum)
+
+ggplot(Ventas_Segmento, aes(x=Segmento, y=Cantidad))+
+  geom_bar(stat="identity", width=.5, fill="darkred") +
+  geom_text(aes(y= Cantidad, label = scales::comma(Cantidad)),
+            position = position_dodge(width = 0.9), size = 3, vjust = -2, hjust = 0.5, col = "black") +
+  labs(x= "Segmento", y="Unidades",
+       caption="Fuente de Datos: INEGI") +
+  scale_y_continuous(labels = marks_no_sci) +
+  coord_flip() +
+  theme_economist()
+```
+
+Por último, estamos viviendo una etapa atípica en la industria automotriz de nuestro país, en gran medida ocasionada por el efecto del nearshoring. 
+
+Hay nuevas marcas, todas de China, que están llegando a México casi al mismo tiempo, lo cual ocasionó que en 2022 el país asiático se convertirá en el principal proveedor de vehículos ligeros a México, por encima de Estados Unidos.
+
+De enero a noviembre del 2022, nuestro país importó 153,707 vehículos hechos en China de un total de 651,710 unidades que adquirió del mundo, es decir el 23.5%. De modo que fueron 8 marcas automotrices, 5 de ellas chinas, las que se surtieron de esa nación como una respuesta por la falta de semiconductores.
+
+En 2021, India fue el principal proveedor de autos en México, pero la férrea competencia coloca a China a la cabeza en 2022, y a las unidades indias hasta el quinto sitio con 61,917 unidades. Estados Unidos es el segundo proveedor de autos para el mercado mexicano con 92,591 unidades; seguido por Brasil con 88,592 y Japón con 65,714 autos.
+
+## Origen de los Vehículos Vendidos
+
+```{r Origen Vehículos, echo=FALSE}
+Ventas_Origen <- aggregate(Cantidad ~ Origen, Vehiculos, FUN = sum)
+
+ggplot(Ventas_Origen, aes(x=Origen, y=Cantidad))+
+  geom_bar(stat="identity", width=.5, fill="darkorange") +
+  geom_text(aes(y= Cantidad, label = scales::comma(Cantidad)),
+            position = position_dodge(width = 0.9), size = 3, vjust = -0.5, hjust = 0.5, col = "black") +
+  labs(x= "Origen", y="Unidades",
+       caption="Fuente de Datos: INEGI") +
+  scale_y_continuous(labels = marks_no_sci) +
+  theme_economist()
+```
+
+
+**Nota:** Toda la información que se utilizó para este análisis fue obtenida de la siguiente página de internet: <https://www.inegi.org.mx/datosprimarios/iavl/>.
